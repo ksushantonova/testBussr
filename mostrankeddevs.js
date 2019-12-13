@@ -30,7 +30,7 @@ class MostRankedDevs {
   }
 
   validateCity(city){
-    if(typeof city !== 'string' || city.length > 11 ){
+    if( !isNaN(+city) || city.length > 11 ){
       return false;
     } else {
       return true;
