@@ -7,7 +7,7 @@ class MostRankedDevs {
     if (this.isValidSity(city)) {
       axios({
         method: 'get',
-        url: `https://api.github.com/search/users?q=location:${city}+language:javascript+followers:>800`,
+        url: `https://api.github.com/search/users?q=location:${city}+language:javascript+followers:>100`,
         headers: { 'user-agent': 'node.js' },
       })
         .then(response => {
