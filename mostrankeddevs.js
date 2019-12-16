@@ -68,12 +68,10 @@ class MostRankedDevs {
       stars += repo.stargazers_count;
     });
 
-    const data = {
+    return {
       stars,
       user
-    }
-    
-    return data;
+    };
   }
 
   printResult(arr, num) {
