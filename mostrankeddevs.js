@@ -2,19 +2,12 @@ const axios = require('axios');
 const city = process.argv.slice(2)[0];
 
 class MostRankedDevs {
-  constructor() {
-    this.temporaryArr = [];
-  }
   //searching users from city
-  search(city, numberOfUsers) {
+  search(city) {
     if (this.isValidSity(city)) {
-      for (let i = 0; i < numberOfUsers; i++) {
-        this.temporaryArr.push([0]);
-      }
-
       axios({
         method: 'get',
-        url: `https://api.github.com/search/users?q=location:${city}+language:javascript+followers:>200`,
+        url: `https://api.github.com/search/users?q=location:${city}+language:javascript+followers:>800`,
         headers: { 'user-agent': 'node.js' },
       })
         .then(response => {
@@ -22,7 +15,7 @@ class MostRankedDevs {
           this.getRepositories(users);
         })
         .catch(err => {
-          console.log(err.response.data.message);
+          console.log(err);
         });
     } else {
       console.log(`There is no city ${city}. Please enter valid city`);
@@ -42,67 +35,55 @@ class MostRankedDevs {
         headers: { 'user-agent': 'node.js' },
       })
         .then(response => {
-          return response.data;
+          const data = {user: user.login, repositories: response.data.items}
+          return data;
         })
         .catch(err => {
           console.log(err.response.data.message);
         });
-    });
+    })
 
     Promise.all(repositories)
-      .then(responses => {
-        responses.forEach(resp => {
-          this.calculateResult(resp);
-        });
-
-        this.printResult();
-      })
-      .catch(err => {
-        console.log(err.response.data.message);
+    .then(responses => {
+      const popularity = responses.map(resp => {
+        return this.calculateResult(resp.user, resp.repositories);
       });
+
+      this.sortUsersByPopularity(popularity);
+      this.printResult(popularity, 3);
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  }
+
+  sortUsersByPopularity(users) {
+    users.sort((a, b) => b.stars - a.stars);
   }
 
   //calculate stars
-  calculateResult(resp) {
+  calculateResult(user, repos) {
     let stars = 0;
-    resp.items.forEach(repo => {
+    repos.forEach(repo => {
       stars += repo.stargazers_count;
     });
 
-    if (resp.items[0] !== undefined) {
-      const username = resp.items[0].full_name.split('/')[0];
-
-      //sort results
-      this.sort(stars, username, this.temporaryArr.length - 1);
+    const data = {
+      stars,
+      user
     }
+    
+    return data;
   }
 
-  printResult() {
-    console.log(this.temporaryArr);
-    this.temporaryArr.forEach(el => {
-      console.log(el[1]);
-    });
-  }
-
-  sort(stars, name) {
-    function sortArray(i, arr) {
-      if (i === 0 || (stars > arr[i][0] && stars <= arr[i - 1][0])) {
-        if (i < arr.length - 1) {
-          for (let j = arr.length - 1; j > i; j--) {
-            arr[j] = arr[j - 1];
-          }
-        }
-        arr[i] = [];
-        arr[i].push(stars);
-        arr[i].push(name);
-      } else if (i !== 0) {
-        sortArray(i - 1, arr);
+  printResult(arr, num) {
+    arr.forEach((el, i) => {
+      if(i < num){
+        console.log(el.user);
       }
-    }
-
-    sortArray(this.temporaryArr.length - 1, this.temporaryArr);
+    });
   }
 }
 
 const searcher = new MostRankedDevs();
-searcher.search(city, 3);
+searcher.search(city);
