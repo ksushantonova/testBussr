@@ -2,7 +2,6 @@ const axios = require('axios');
 const city = process.argv.slice(2)[0];
 
 class MostRankedDevs {
-  //searching users from city
   search(city) {
     if (this.isValidSity(city)) {
       axios({
@@ -12,7 +11,7 @@ class MostRankedDevs {
       })
         .then(response => {
           const users = response.data.items;
-          this.getRepositories(users);
+          this.process(users);
         })
         .catch(err => {
           console.log(err);
@@ -26,8 +25,7 @@ class MostRankedDevs {
     return isNaN(Number(city)) && city.length <= 11;
   }
 
-  //get their repositories
-  getRepositories(users) {
+  process(users) {
     let repositories = users.map(user => {
       return axios({
         method: 'get',
@@ -35,8 +33,10 @@ class MostRankedDevs {
         headers: { 'user-agent': 'node.js' },
       })
         .then(response => {
-          const data = {user: user.login, repositories: response.data.items}
-          return data;
+          return { 
+            user: user.login, 
+            repositories: response.data.items
+          }
         })
         .catch(err => {
           console.log(err.response.data.message);
@@ -61,7 +61,6 @@ class MostRankedDevs {
     users.sort((a, b) => b.stars - a.stars);
   }
 
-  //calculate stars
   calculateResult(user, repos) {
     let stars = 0;
     repos.forEach(repo => {
@@ -74,12 +73,8 @@ class MostRankedDevs {
     };
   }
 
-  printResult(arr, num) {
-    arr.forEach((el, i) => {
-      if(i < num){
-        console.log(el.user);
-      }
-    });
+  printResult(users, num) {
+    users.slice(0, num).forEach(usr => console.log(usr.user));
   }
 }
 
